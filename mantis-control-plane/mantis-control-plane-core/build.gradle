@@ -32,9 +32,10 @@ dependencies {
     api project(":mantis-common")
 
     api "org.skife.config:config-magic:$configMagicVersion"
+    api 'com.google.code.findbugs:jsr305:3.0.1' // For Nonnull annotation
     api libraries.flinkRpcApi
-    api libraries.flinkRpcImpl
     api libraries.flinkCore
+    compileOnly libraries.flinkRpcImpl // Provided by copyLibs task
 
     api "org.apache.mesos:mesos:$mesosVersion"
     api "org.json:json:$jsonVersion"
@@ -42,7 +43,17 @@ dependencies {
     api "com.github.spullara.cli-parser:cli-parser:$cliParserVersion"
     api "joda-time:joda-time:$jodaTimeVersion"
 
-
+    testFixturesImplementation "org.apache.flink:flink-rpc-akka:1.14.2"
     testImplementation libraries.junit4
     testImplementation libraries.mockitoAll
 }
+
+task copyLibs(type: Copy) {
+    from(sourceSets.main.compileClasspath) {
+        rename 'flink-rpc-akka(.*)', 'flink-rpc-akka.jar'
+    }
+    include '*flink-rpc-akka*.jar'
+    into "$buildDir/classes/java/main"
+}
+
+jar.dependsOn copyLibs
